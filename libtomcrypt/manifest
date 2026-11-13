@@ -1,6 +1,6 @@
 : 1
 name: libtomcrypt
-version: 1.18.2-a.0.z
+version: 1.18.2
 language: c
 summary: Cryptographic toolkit C library
 license: other: public domain ; Released into the public domain.

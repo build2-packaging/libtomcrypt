@@ -1,0 +1,63 @@
+--- ltm_desc.c.orig	2026-11-13 11:02:15.576968857 -0500
++++ ltm_desc.c	2026-11-13 11:53:21.991467518 -0500
+@@ -89,13 +89,14 @@
+ static int set_int(void *a, ltc_mp_digit b)
+ {
+    LTC_ARGCHK(a != NULL);
+-   return mpi_to_ltc_error(mp_set_int(a, b));
++   mp_set_u32(a, (uint32_t)b);
++   return CRYPT_OK;
+ }
+ 
+ static unsigned long get_int(void *a)
+ {
+    LTC_ARGCHK(a != NULL);
+-   return mp_get_int(a);
++   return (unsigned long)mp_get_mag_u32(a);
+ }
+ 
+ static ltc_mp_digit get_digit(void *a, int n)
+@@ -175,14 +176,14 @@
+ {
+    LTC_ARGCHK(a != NULL);
+    LTC_ARGCHK(b != NULL);
+-   return mpi_to_ltc_error(mp_toradix(a, b, radix));
++   return mpi_to_ltc_error(mp_to_radix(a, b, SIZE_MAX, NULL, radix));
+ }
+ 
+ /* get size as unsigned char string */
+ static unsigned long unsigned_size(void *a)
+ {
+    LTC_ARGCHK(a != NULL);
+-   return mp_unsigned_bin_size(a);
++   return (unsigned long)mp_ubin_size(a);
+ }
+ 
+ /* store */
+@@ -190,7 +191,7 @@
+ {
+    LTC_ARGCHK(a != NULL);
+    LTC_ARGCHK(b != NULL);
+-   return mpi_to_ltc_error(mp_to_unsigned_bin(a, b));
++   return mpi_to_ltc_error(mp_to_ubin(a, b, SIZE_MAX, NULL));
+ }
+ 
+ /* read */
+@@ -198,7 +199,7 @@
+ {
+    LTC_ARGCHK(a != NULL);
+    LTC_ARGCHK(b != NULL);
+-   return mpi_to_ltc_error(mp_read_unsigned_bin(a, b, len));
++   return mpi_to_ltc_error(mp_from_ubin(a, b, (size_t)len));
+ }
+ 
+ /* add */
+@@ -420,7 +421,7 @@
+ const ltc_math_descriptor ltm_desc = {
+ 
+    "LibTomMath",
+-   (int)DIGIT_BIT,
++   (int)MP_DIGIT_BIT,
+ 
+    &init,
+    &init_copy,

@@ -1,0 +1,31 @@
+We apply the following patches to upstream source code.
+
+libtomcrypt/math/ltm_desc.c:
+
+1) Replace libtommath functions and macros deprecated since libtommath 1.2.0
+   with their replacements.
+
+   Each replacement is the definition of corresponding deprecated function
+   in libtommath, which keeps behavior of libtommath math descriptor
+   (ltm_desc) unchanged. Upstream made similar changes on its develop
+   branch (commits c11287a0, 7c56243a, 3e11e86f, and a3310959), which are
+   not yet in a release. Note that there get_int() uses mp_get_ul(), which
+   changes its result for values that don't fit into 32 bits, so we don't
+   backport these commits as is.
+
+Patches were made as follows:
+
+$ cd libtomcrypt/math/
+$ mv ltm_desc.c ltm_desc.c.orig
+$ cp -H ltm_desc.c.orig ltm_desc.c
+$ edit ltm_desc.c
+$ diff -u ltm_desc.c.orig ltm_desc.c >ltm_desc.c.patch
+
+To re-apply them after upgrading upstream submodule:
+
+$ cd libtomcrypt/math/
+$ cp -H ltm_desc.c.orig ltm_desc.c
+$ patch <ltm_desc.c.patch
+
+Note that we symlink upstream source subdirectories as a whole, except for
+math/, which we symlink file by file to be able to patch ltm_desc.c.

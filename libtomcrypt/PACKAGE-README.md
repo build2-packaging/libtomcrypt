@@ -1,7 +1,10 @@
-# libtomcrypt - Previously the git repository contained `doc/crypt
+# libtomcrypt - Cryptographic toolkit C library
 
-This is a `build2` package for the [`<UPSTREAM-NAME>`](https://<UPSTREAM-URL>)
-C library. It provides <SUMMARY-OF-FUNCTIONALITY>.
+This is a `build2` package for the
+[`libtomcrypt`](https://github.com/libtom/libtomcrypt) C library. It provides
+a modular and portable cryptographic toolkit that implements a wide range of
+well-known published algorithms, from block ciphers and hash functions to
+public key cryptography.
 
 
 ## Usage
@@ -10,33 +13,30 @@ To start using `libtomcrypt` in your project, add the following `depends`
 value to your `manifest`, adjusting the version constraint as appropriate:
 
 ```
-depends: libtomcrypt ^<VERSION>
+depends: libtomcrypt ^1.18.2
 ```
 
 Then import the library in your `buildfile`:
 
 ```
-import libs = libtomcrypt%lib{<TARGET>}
+import libs = libtomcrypt%lib{tomcrypt}
 ```
 
+The library interface is declared in the `<tomcrypt.h>` header.
 
-## Importable targets
+The library is built with the default upstream configuration (see
+`<tomcrypt_custom.h>`), which enables all the algorithms. Note that this
+configuration doesn't define `LTC_PTHREAD`, so the library doesn't protect
+its descriptor tables and PRNG states with mutexes.
 
-This package provides the following importable targets:
-
-```
-lib{<TARGET>}
-```
-
-<DESCRIPTION-OF-IMPORTABLE-TARGETS>
-
-
-## Configuration variables
-
-This package provides the following configuration variables:
+Public key algorithms use [`libtommath`](https://cppget.org/libtommath) as
+their math library, which the application selects before calling them:
 
 ```
-[bool] config.libtomcrypt.<VARIABLE> ?= false
+ltc_mp = ltm_desc;
 ```
 
-<DESCRIPTION-OF-CONFIG-VARIABLES>
+Note that with MSVC only the static library is built since `<tomcrypt.h>`
+declares global data that is part of the interface (such as `ltc_mp`)
+without `__declspec(dllimport)`, which MSVC requires to access data in a
+DLL.

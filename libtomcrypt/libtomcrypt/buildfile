@@ -75,6 +75,22 @@ if ($c.class == 'msvc')
       stream/chacha/chacha_test}: c.coptions += /wd4267
 }
 
+# GCC can't prove that CCM fills exactly the 16 bytes of its first block and
+# warns about writing past it with optimization (-Wstringop-overflow). Upstream
+# silences this warning with checks that never fail (see upstream commits
+# 97edea36 and 349d56e3) and we disable it for these sources only.
+#
+# GCC also warns that the PKCS #5 self-test counts the vectors it tests
+# without using the count (-Wunused-but-set-variable).
+#
+if ($c.id == 'gcc')
+{
+  obj{encauth/ccm/ccm_add_nonce \
+      encauth/ccm/ccm_memory}: c.coptions += -Wno-stringop-overflow
+
+  obj{misc/pkcs5/pkcs_5_test}: c.coptions += -Wno-unused-but-set-variable
+}
+
 if ($c.target.system == 'mingw32')
   c.loptions += -Wl,--export-all-symbols
 

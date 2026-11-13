@@ -1,29 +1,81 @@
 intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
-#import xxxx_libs += libhello%lib{hello}
+import impl_libs += libtommath%lib{tommath}
 
-lib{tomcrypt}: libul{tomcrypt}: {h c}{**} $impl_libs $intf_libs
+# Note that upstream keeps its sources and public headers in subdirectories
+# of src/, which we symlink as a whole (except for math/; see README-DEV for
+# details).
+#
+# Note also that some sources include lookup tables that are themselves C
+# files and that we shouldn't compile on their own.
+#
+tabs = ciphers/aes/aes_tab         \
+       ciphers/safer/safer_tab     \
+       ciphers/twofish/twofish_tab \
+       hashes/whirl/whirltab       \
+       stream/sober128/sober128tab
 
-libs{tomcrypt}: def{tomcrypt}: include = ($c.target.system == 'win32-msvc')
-def{tomcrypt}: libul{tomcrypt}
+lib{tomcrypt}: {h c}{** -{$tabs}} $impl_libs $intf_libs
+lib{tomcrypt}: c{$tabs}: include = adhoc
 
 # Build options.
 #
-out_pfx = [dir_path] $out_root/libtomcrypt/
 src_pfx = [dir_path] $src_root/libtomcrypt/
 
-c.poptions =+ "-I$out_pfx" "-I$src_pfx"
+c.poptions =+ "-I$src_pfx/headers"
+
+# Define LTC_SOURCE to expose declarations internal to the library and
+# LTM_DESC to enable the libtommath math descriptor (ltm_desc). Note that
+# LTM_DESC also adds declarations to the public headers, so we export it as
+# well (see below).
+#
+c.poptions += -DLTC_SOURCE -DLTM_DESC
+
+# Suppress MSVC deprecation warnings for standard C functions, as upstream
+# does (see makefile.msvc).
+#
+if ($c.target.system == 'win32-msvc')
+  c.poptions += -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
+
+# Public headers re-declare the C library functions they use (malloc(),
+# etc), which with MSVC conflicts with their declarations as imported from
+# the C runtime DLL (C4273). Upstream suppresses these re-declarations with
+# LTC_NO_PROTOTYPES in its Visual Studio project and we do the same, both
+# for our build and for consumers (see below).
+#
+if ($c.target.system == 'win32-msvc')
+  c.poptions += -DLTC_NO_PROTOTYPES
+
+# Note that upstream compiles aes.c a second time with ENCRYPT_ONLY defined
+# to produce the encrypt-only AES implementation (aes_enc_desc), which we
+# replicate with a separate object file.
+#
+lib{tomcrypt}: obj{ciphers/aes/aes_enc}
+obj{ciphers/aes/aes_enc}: c{ciphers/aes/aes}
+{
+  c.poptions += -DENCRYPT_ONLY
+}
 
 if ($c.target.system == 'mingw32')
   c.loptions += -Wl,--export-all-symbols
+
+# Windows random number source (CryptGenRandom()) is provided by
+# advapi32.lib, which upstream links explicitly (see makefile.msvc). MinGW
+# links it by default.
+#
+if ($c.target.system == 'win32-msvc')
+  c.libs += advapi32.lib
 
 # Export options.
 #
 lib{tomcrypt}:
 {
-  c.export.poptions = "-I$out_pfx" "-I$src_pfx"
+  c.export.poptions = "-I$src_pfx/headers" -DLTM_DESC
   c.export.libs = $intf_libs
 }
+
+if ($c.target.system == 'win32-msvc')
+  lib{tomcrypt}: c.export.poptions += -DLTC_NO_PROTOTYPES
 
 # For pre-releases use the complete version to make sure they cannot
 # be used in place of another pre-release or the final version. See
@@ -34,10 +86,7 @@ if $version.pre_release
 else
   lib{tomcrypt}: bin.lib.version = "-$version.major.$version.minor"
 
-# Install recreating subdirectories.
+# Install public headers directly into, say, /usr/include/, as upstream
+# does.
 #
-h{*}:
-{
-  install         = include/
-  install.subdirs = true
-}
+h{*}: install = include/

@@ -4,6 +4,14 @@
 
 using c
 
+# Upstream headers declare global data that is part of the API (for example,
+# ltc_mp) without __declspec(dllimport), which MSVC requires to access data
+# in a DLL. So for MSVC we only build static library, as upstream does (see
+# makefile.msvc).
+#
+if ($c.target.system == 'win32-msvc')
+  bin.lib = static
+
 h{*}: extension = h
 c{*}: extension = c
 

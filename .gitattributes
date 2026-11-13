@@ -17,3 +17,15 @@
 # Use `binary` to make sure certain files are never auto-detected as text.
 #
 #*.png binary
+
+libtomcrypt/libtomcrypt/ciphers symlink=dir
+libtomcrypt/libtomcrypt/encauth symlink=dir
+libtomcrypt/libtomcrypt/hashes symlink=dir
+libtomcrypt/libtomcrypt/headers symlink=dir
+libtomcrypt/libtomcrypt/mac symlink=dir
+libtomcrypt/libtomcrypt/math/fp symlink=dir
+libtomcrypt/libtomcrypt/misc symlink=dir
+libtomcrypt/libtomcrypt/modes symlink=dir
+libtomcrypt/libtomcrypt/pk symlink=dir
+libtomcrypt/libtomcrypt/prngs symlink=dir
+libtomcrypt/libtomcrypt/stream symlink=dir

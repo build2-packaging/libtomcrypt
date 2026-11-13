@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libtomcrypt/
+}
+
+export $out_root/libtomcrypt/$import.target

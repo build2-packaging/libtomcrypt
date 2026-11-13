@@ -1,0 +1,3 @@
+import libs = libtomcrypt%lib{tomcrypt}
+
+exe{driver}: {h c}{**} $libs testscript{**}

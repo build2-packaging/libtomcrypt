@@ -56,6 +56,25 @@ obj{ciphers/aes/aes_enc}: c{ciphers/aes/aes}
   c.poptions += -DENCRYPT_ONLY
 }
 
+# Built-in self-tests of some algorithms pass strlen() of their test strings
+# as unsigned long, which MSVC warns about for 64-bit targets (C4267). The
+# strings are short literals, so we disable this warning for these sources
+# only, keeping it for the rest of the library.
+#
+if ($c.class == 'msvc')
+{
+  obj{encauth/chachapoly/chacha20poly1305_test \
+      hashes/chc/chc                            \
+      hashes/rmd128                             \
+      hashes/rmd160                             \
+      hashes/rmd256                             \
+      hashes/rmd320                             \
+      mac/poly1305/poly1305_test                \
+      misc/adler32                              \
+      misc/crc32                                \
+      stream/chacha/chacha_test}: c.coptions += /wd4267
+}
+
 if ($c.target.system == 'mingw32')
   c.loptions += -Wl,--export-all-symbols
 
